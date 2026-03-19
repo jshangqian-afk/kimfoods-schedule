@@ -478,6 +478,27 @@ header h1 { font-size: 18px; font-weight: 700; }
 }
 
 /* ===== Misc ===== */
+/* ===== LINE Share Button ===== */
+.btn-line-share {
+  display: block;
+  width: 100%;
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  border: none;
+  background: #06C755;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 52px;
+  box-shadow: var(--shadow);
+}
+.btn-line-share:active { background: #05a648; }
+.btn-line-share.copied {
+  background: var(--primary);
+}
+
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
 .text-center { text-align: center; }
 .mt-8 { margin-top: 8px; }
@@ -540,6 +561,8 @@ header h1 { font-size: 18px; font-weight: 700; }
     <div class="label">合計</div>
     <div class="value" id="daily-total-value">0 kg</div>
   </div>
+
+  <button class="btn-line-share" id="line-share-btn" onclick="copyScheduleToClipboard()">📋 LINEで共有</button>
 </div>
 
 <!-- ===== Settings Page ===== -->
@@ -1146,7 +1169,7 @@ function copyScheduleToClipboard() {
     return;
   }
 
-  let text = `📋 真田 ${currentDate.getMonth()+1}/${currentDate.getDate()} 製造スケジュール\n`;
+  let text = `📋 KimFoods 製造スケジュール\n${currentDate.getMonth()+1}/${currentDate.getDate()}（${WEEKDAYS[currentDate.getDay()]}）\n`;
   let dayTotal = 0;
 
   categories.forEach(cat => {
@@ -1159,30 +1182,39 @@ function copyScheduleToClipboard() {
       if (!entry || !entry.quantity) return;
       const kg = prod.noCalc ? 0 : prod.contentG * entry.quantity * (prod.coefficient || 0.68) / 1000;
       catKg += kg;
-      const padName = prod.name.padEnd(12, '\u3000');
-      catLines.push(`  ${padName}${entry.quantity}個`);
+      catLines.push({ name: prod.name, qty: entry.quantity });
     });
 
     if (catLines.length > 0) {
       dayTotal += catKg;
-      text += `\n▼${cat.name}（${catKg.toFixed(1)}kg）\n`;
-      text += catLines.join('\n') + '\n';
+      // Find the longest name to align quantities
+      const maxLen = Math.max(...catLines.map(l => [...l.name].length));
+      text += `\n▼ ${cat.name}　合計${catKg.toFixed(1)}kg\n`;
+      catLines.forEach(l => {
+        const pad = '　'.repeat(Math.max(0, maxLen - [...l.name].length + 1));
+        text += `  ${l.name}${pad}${l.qty}個\n`;
+      });
     }
   });
 
   text += `\n合計：${dayTotal.toFixed(1)}kg`;
 
+  const btn = document.getElementById('line-share-btn');
+
   navigator.clipboard.writeText(text).then(() => {
-    alert('クリップボードにコピーしました。\nLINEに貼り付けてください。');
+    btn.textContent = '✅ コピーしました！';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '📋 LINEで共有'; btn.classList.remove('copied'); }, 2000);
   }).catch(() => {
-    // Fallback for older browsers
     const ta = document.createElement('textarea');
     ta.value = text;
     document.body.appendChild(ta);
     ta.select();
     document.execCommand('copy');
     document.body.removeChild(ta);
-    alert('クリップボードにコピーしました。\nLINEに貼り付けてください。');
+    btn.textContent = '✅ コピーしました！';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '📋 LINEで共有'; btn.classList.remove('copied'); }, 2000);
   });
 }
 

@@ -1,0 +1,1232 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>KimFoods 製造スケジュール</title>
+<style>
+:root {
+  --primary: #1a73e8;
+  --primary-dark: #1557b0;
+  --danger: #d93025;
+  --danger-dark: #b3261e;
+  --success: #1e8e3e;
+  --bg: #f8f9fa;
+  --card: #ffffff;
+  --border: #dadce0;
+  --text: #202124;
+  --text-secondary: #5f6368;
+  --shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
+  --shadow-lg: 0 4px 12px rgba(0,0,0,0.15);
+  --radius: 12px;
+  --cell-min-w: 80px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 16px;
+  overflow-x: hidden;
+  min-height: 100dvh;
+}
+
+/* ===== Header ===== */
+header {
+  background: var(--primary);
+  color: #fff;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow);
+}
+header h1 { font-size: 18px; font-weight: 700; }
+.header-actions { display: flex; gap: 8px; }
+.header-btn {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: #fff;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.header-btn:active { background: rgba(255,255,255,0.35); }
+
+/* ===== Tab Navigation ===== */
+.tab-bar {
+  display: flex;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 68px;
+  z-index: 99;
+}
+.tab-item {
+  flex: 1;
+  padding: 12px 8px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  min-height: 48px;
+}
+.tab-item.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+/* ===== Page containers ===== */
+.page { display: none; padding: 16px; padding-bottom: 32px; }
+.page.active { display: block; }
+
+/* ===== Date Navigation ===== */
+.date-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 12px 0;
+  margin-bottom: 12px;
+}
+.date-nav-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--card);
+  font-size: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+}
+.date-nav-btn:active { background: #e8eaed; }
+.date-display {
+  font-size: 20px;
+  font-weight: 700;
+  min-width: 180px;
+  text-align: center;
+}
+.date-today {
+  font-size: 12px;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* ===== Schedule Grid ===== */
+.schedule-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -16px;
+  padding: 0 16px;
+}
+.category-section {
+  margin-bottom: 20px;
+}
+.category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  background: var(--primary);
+  color: #fff;
+  border-radius: var(--radius) var(--radius) 0 0;
+  font-weight: 700;
+  font-size: 16px;
+}
+.category-kg { font-size: 14px; opacity: 0.9; }
+.product-row {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid var(--border);
+  background: var(--card);
+  height: 60px;
+  max-height: 60px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.product-row:last-child {
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+.product-name {
+  width: 110px;
+  min-width: 110px;
+  max-width: 110px;
+  padding: 4px 8px;
+  font-weight: 600;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  border-right: 1px solid var(--border);
+  background: #f1f3f4;
+  overflow: hidden;
+  line-height: 1.3;
+}
+.product-name span {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-all;
+}
+.product-cells {
+  display: flex;
+  flex: 1;
+  overflow-x: auto;
+}
+.day-cell {
+  min-width: var(--cell-min-w);
+  flex: 1;
+  padding: 8px 6px;
+  text-align: center;
+  cursor: pointer;
+  border-right: 1px solid #eee;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+.day-cell:active { background: #e8f0fe; }
+.day-cell .qty {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+}
+.day-cell .kg {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.day-cell.empty .qty { color: #ccc; }
+
+/* Multi-day header */
+.days-header {
+  display: flex;
+  align-items: stretch;
+}
+.days-header-label {
+  min-width: 100px;
+  max-width: 120px;
+  border-right: 1px solid var(--border);
+}
+.days-header-cells {
+  display: flex;
+  flex: 1;
+}
+.day-header-cell {
+  min-width: var(--cell-min-w);
+  flex: 1;
+  text-align: center;
+  padding: 8px 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border-right: 1px solid #eee;
+}
+.day-header-cell.today {
+  color: var(--primary);
+  background: #e8f0fe;
+  border-radius: 8px 8px 0 0;
+}
+.day-header-cell.sun { color: var(--danger); }
+.day-header-cell.sat { color: #1a73e8; }
+
+/* Daily total */
+.daily-total {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-top: 12px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+.daily-total .label { font-size: 14px; color: var(--text-secondary); }
+.daily-total .value { font-size: 32px; font-weight: 800; color: var(--primary); }
+
+/* ===== Single-day mode (default mobile) ===== */
+.single-day-grid .product-row {
+  display: flex;
+}
+.single-day-grid .day-cell {
+  flex: 1;
+  min-width: unset;
+}
+
+/* ===== Multi-day toggle ===== */
+.view-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  justify-content: center;
+}
+.view-toggle button {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+.view-toggle button.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+
+/* ===== Modal ===== */
+.modal-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 200;
+  align-items: flex-end;
+  justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal {
+  background: var(--card);
+  border-radius: 20px 20px 0 0;
+  width: 100%;
+  max-width: 500px;
+  max-height: 85dvh;
+  overflow-y: auto;
+  padding: 24px 20px 32px;
+  animation: slideUp 0.25s ease-out;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+.modal-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.modal-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+.form-group { margin-bottom: 16px; }
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+.form-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  font-size: 18px;
+  outline: none;
+  -webkit-appearance: none;
+}
+.form-input:focus { border-color: var(--primary); }
+.form-select {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  font-size: 16px;
+  background: var(--card);
+  outline: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%235f6368'%3E%3Cpath d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+}
+.calc-result {
+  background: #e8f5e9;
+  padding: 16px;
+  border-radius: 10px;
+  text-align: center;
+  margin: 16px 0;
+}
+.calc-result .label { font-size: 13px; color: var(--success); font-weight: 600; }
+.calc-result .value { font-size: 28px; font-weight: 800; color: var(--success); }
+.calc-formula { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+.btn {
+  flex: 1;
+  padding: 16px;
+  border-radius: 12px;
+  border: none;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 52px;
+}
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:active { background: var(--primary-dark); }
+.btn-secondary { background: #e8eaed; color: var(--text); }
+.btn-secondary:active { background: #d2d5d9; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger:active { background: var(--danger-dark); }
+.btn-sm { padding: 10px 16px; font-size: 14px; min-height: 40px; }
+.btn-block { width: 100%; }
+
+/* ===== Settings ===== */
+.settings-section {
+  background: var(--card);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.settings-section-title {
+  padding: 14px 16px;
+  font-weight: 700;
+  font-size: 16px;
+  background: #f1f3f4;
+  border-bottom: 1px solid var(--border);
+}
+.settings-list { list-style: none; }
+.settings-item {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  border-bottom: 1px solid #eee;
+  gap: 12px;
+}
+.settings-item:last-child { border-bottom: none; }
+.settings-item-content { flex: 1; }
+.settings-item-name { font-weight: 600; font-size: 15px; }
+.settings-item-detail { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+.settings-item-actions { display: flex; gap: 6px; }
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--card);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.icon-btn:active { background: #e8eaed; }
+.icon-btn.danger { color: var(--danger); border-color: var(--danger); }
+.icon-btn.danger:active { background: #fce8e6; }
+.add-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px;
+  color: var(--primary);
+  font-weight: 600;
+  font-size: 15px;
+  background: none;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+  border-top: 1px solid #eee;
+}
+.add-btn:active { background: #e8f0fe; }
+
+/* Drag handle */
+.drag-handle {
+  cursor: grab;
+  font-size: 20px;
+  color: #bbb;
+  padding: 0 4px;
+  touch-action: none;
+}
+
+/* ===== Empty state ===== */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-secondary);
+}
+.empty-state-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-state-text { font-size: 16px; }
+.empty-state-sub { font-size: 14px; margin-top: 8px; }
+
+/* ===== Centered modal (for settings) ===== */
+.modal-overlay.centered { align-items: center; }
+.modal-overlay.centered .modal {
+  border-radius: 20px;
+  max-height: 80dvh;
+  margin: 20px;
+}
+
+/* ===== Misc ===== */
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+.text-center { text-align: center; }
+.mt-8 { margin-top: 8px; }
+.mt-16 { margin-top: 16px; }
+.mb-8 { margin-bottom: 8px; }
+
+/* Checkbox */
+.form-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 0;
+  cursor: pointer;
+}
+.form-checkbox input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+}
+.form-checkbox label {
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.form-group.disabled .form-input {
+  background: #e8eaed;
+  color: #999;
+  pointer-events: none;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>KimFoods スケジュール</h1>
+  <div class="header-actions">
+    <button class="header-btn" onclick="copyScheduleToClipboard()" title="LINE共有">&#x1f4cb;</button>
+  </div>
+</header>
+
+<nav class="tab-bar">
+  <button class="tab-item active" data-tab="schedule">スケジュール</button>
+  <button class="tab-item" data-tab="settings">設定</button>
+</nav>
+
+<!-- ===== Schedule Page ===== -->
+<div id="page-schedule" class="page active">
+  <div class="date-nav">
+    <button class="date-nav-btn" onclick="changeDate(-1)">&#x276E;</button>
+    <div>
+      <div class="date-display" id="date-display"></div>
+      <div class="date-today text-center" id="date-today-label"></div>
+    </div>
+    <button class="date-nav-btn" onclick="changeDate(1)">&#x276F;</button>
+  </div>
+
+  <div id="schedule-content"></div>
+
+  <div class="daily-total" id="daily-total">
+    <div class="label">合計</div>
+    <div class="value" id="daily-total-value">0 kg</div>
+  </div>
+</div>
+
+<!-- ===== Settings Page ===== -->
+<div id="page-settings" class="page">
+  <!-- Categories -->
+  <div class="settings-section">
+    <div class="settings-section-title">カテゴリ管理</div>
+    <ul class="settings-list" id="category-list"></ul>
+    <button class="add-btn" onclick="openCategoryModal()">＋ カテゴリを追加</button>
+  </div>
+
+  <!-- Products -->
+  <div class="settings-section">
+    <div class="settings-section-title">商品マスタ管理</div>
+    <ul class="settings-list" id="product-list"></ul>
+    <button class="add-btn" onclick="openProductModal()">＋ 商品を追加</button>
+  </div>
+
+  <!-- Data management -->
+  <div class="settings-section">
+    <div class="settings-section-title">データ管理</div>
+    <div style="padding: 16px; display: flex; flex-direction: column; gap: 10px;">
+      <button class="btn btn-secondary btn-block" onclick="exportData()">データをエクスポート</button>
+      <button class="btn btn-secondary btn-block" onclick="document.getElementById('import-file').click()">データをインポート</button>
+      <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+      <button class="btn btn-danger btn-block btn-sm" onclick="confirmResetData()">全データリセット</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Input Modal ===== -->
+<div class="modal-overlay" id="input-modal">
+  <div class="modal">
+    <div class="modal-title" id="input-modal-title"></div>
+    <div class="modal-subtitle" id="input-modal-subtitle"></div>
+
+    <div class="form-group">
+      <label class="form-label">数量（個）</label>
+      <input type="number" class="form-input" id="input-quantity" inputmode="numeric" pattern="[0-9]*" min="0" placeholder="0" oninput="updateCalc()">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">メモ</label>
+      <input type="text" class="form-input" id="input-note" placeholder="メモ（任意）" style="font-size:15px;">
+    </div>
+
+    <div class="calc-result" id="calc-result-section">
+      <div class="label">原料</div>
+      <div class="value" id="calc-kg">0 kg</div>
+      <div class="calc-formula" id="calc-formula"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeInputModal()">キャンセル</button>
+      <button class="btn btn-danger btn-sm" id="input-delete-btn" onclick="deleteScheduleEntry()" style="display:none;flex:0 0 auto;padding:16px;">削除</button>
+      <button class="btn btn-primary" onclick="saveScheduleEntry()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Category Modal ===== -->
+<div class="modal-overlay centered" id="category-modal">
+  <div class="modal">
+    <div class="modal-title" id="category-modal-title">カテゴリ追加</div>
+    <div class="form-group mt-16">
+      <label class="form-label">カテゴリ名</label>
+      <input type="text" class="form-input" id="cat-name" placeholder="例：中辛">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeCategoryModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveCategory()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Product Modal ===== -->
+<div class="modal-overlay centered" id="product-modal">
+  <div class="modal">
+    <div class="modal-title" id="product-modal-title">商品追加</div>
+    <div class="form-group mt-16">
+      <label class="form-label">商品名</label>
+      <input type="text" class="form-input" id="prod-name" placeholder="例：330g">
+    </div>
+    <div class="form-group">
+      <label class="form-label">カテゴリ</label>
+      <select class="form-select" id="prod-category"></select>
+    </div>
+    <div class="form-group">
+      <div class="form-checkbox">
+        <input type="checkbox" id="prod-nocalc" onchange="toggleNoCalcFields()">
+        <label for="prod-nocalc">原料計算しない</label>
+      </div>
+    </div>
+    <div class="form-group" id="prod-contentg-group">
+      <label class="form-label">内容量（g）</label>
+      <input type="number" class="form-input" id="prod-contentg" inputmode="decimal" placeholder="例：330" min="0">
+    </div>
+    <div class="form-group" id="prod-coeff-group">
+      <label class="form-label">係数（デフォルト 0.68）</label>
+      <input type="number" class="form-input" id="prod-coeff" inputmode="decimal" step="0.01" placeholder="0.68" min="0">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeProductModal()">キャンセル</button>
+      <button class="btn btn-primary" onclick="saveProduct()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Confirm Modal ===== -->
+<div class="modal-overlay centered" id="confirm-modal">
+  <div class="modal">
+    <div class="modal-title" id="confirm-title"></div>
+    <div class="modal-subtitle" id="confirm-message"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeConfirm()">キャンセル</button>
+      <button class="btn btn-danger" id="confirm-ok-btn">実行</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== Data Layer =====
+const KEYS = {
+  products: 'kimfoods_products',
+  categories: 'kimfoods_categories',
+  schedules: 'kimfoods_schedules',
+};
+
+function load(key) {
+  try { return JSON.parse(localStorage.getItem(key)) || []; }
+  catch { return []; }
+}
+function save(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
+
+function getProducts() { return load(KEYS.products); }
+function getCategories() { return load(KEYS.categories); }
+function getSchedules() { return load(KEYS.schedules); }
+
+function setProducts(d) { save(KEYS.products, d); }
+function setCategories(d) { save(KEYS.categories, d); }
+function setSchedules(d) { save(KEYS.schedules, d); }
+
+function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+
+// ===== Date Utilities =====
+const WEEKDAYS = ['日','月','火','水','木','金','土'];
+
+let currentDate = new Date();
+currentDate.setHours(0,0,0,0);
+
+function formatDate(d) {
+  const m = d.getMonth() + 1;
+  const day = d.getDate();
+  const wd = WEEKDAYS[d.getDay()];
+  return `${m}/${day}（${wd}）`;
+}
+
+function dateKey(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
+function isToday(d) {
+  const today = new Date();
+  return d.getFullYear() === today.getFullYear() && d.getMonth() === today.getMonth() && d.getDate() === today.getDate();
+}
+
+function changeDate(delta) {
+  currentDate.setDate(currentDate.getDate() + delta);
+  renderSchedule();
+}
+
+// ===== Tab Navigation =====
+document.querySelectorAll('.tab-item').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('page-' + tab.dataset.tab).classList.add('active');
+    if (tab.dataset.tab === 'settings') renderSettings();
+    if (tab.dataset.tab === 'schedule') renderSchedule();
+  });
+});
+
+// ===== Schedule Rendering =====
+function renderSchedule() {
+  const display = document.getElementById('date-display');
+  const todayLabel = document.getElementById('date-today-label');
+  display.textContent = formatDate(currentDate);
+  todayLabel.textContent = isToday(currentDate) ? '今日' : '';
+
+  const products = getProducts().sort((a,b) => (a.order||0) - (b.order||0));
+  const categories = getCategories().sort((a,b) => (a.order||0) - (b.order||0));
+  const schedules = getSchedules();
+  const dk = dateKey(currentDate);
+
+  const container = document.getElementById('schedule-content');
+
+  if (categories.length === 0 || products.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">📋</div>
+        <div class="empty-state-text">商品が登録されていません</div>
+        <div class="empty-state-sub">「設定」タブからカテゴリと商品を追加してください</div>
+      </div>`;
+    document.getElementById('daily-total-value').textContent = '0 kg';
+    return;
+  }
+
+  let html = '';
+  let dayTotalKg = 0;
+
+  categories.forEach(cat => {
+    const catProducts = products.filter(p => p.categoryId === cat.id);
+    if (catProducts.length === 0) return;
+
+    let catKg = 0;
+    let rowsHtml = '';
+
+    catProducts.forEach(prod => {
+      const entry = schedules.find(s => s.date === dk && s.productId === prod.id);
+      const qty = entry ? entry.quantity : 0;
+      const noCalc = !!prod.noCalc;
+      const kg = noCalc ? 0 : prod.contentG * qty * (prod.coefficient || 0.68) / 1000;
+      catKg += kg;
+
+      rowsHtml += `
+        <div class="product-row">
+          <div class="product-name"><span>${esc(prod.name)}</span></div>
+          <div class="day-cell ${qty === 0 ? 'empty' : ''}" onclick="openInputModal('${prod.id}','${dk}')">
+            <div class="qty">${qty > 0 ? qty + '個' : '—'}</div>
+            ${qty > 0 && !noCalc ? `<div class="kg">${kg.toFixed(1)}kg</div>` : ''}
+          </div>
+        </div>`;
+    });
+
+    dayTotalKg += catKg;
+
+    html += `
+      <div class="category-section">
+        <div class="category-header">
+          <span>${esc(cat.name)}</span>
+          <span class="category-kg">${catKg.toFixed(1)} kg</span>
+        </div>
+        ${rowsHtml}
+      </div>`;
+  });
+
+  container.innerHTML = html;
+  document.getElementById('daily-total-value').textContent = dayTotalKg.toFixed(1) + ' kg';
+}
+
+// ===== Input Modal =====
+let editingProductId = null;
+let editingDate = null;
+
+function openInputModal(productId, date) {
+  editingProductId = productId;
+  editingDate = date;
+
+  const prod = getProducts().find(p => p.id === productId);
+  if (!prod) return;
+
+  const cat = getCategories().find(c => c.id === prod.categoryId);
+  document.getElementById('input-modal-title').textContent = prod.name;
+
+  const d = new Date(date + 'T00:00:00');
+  document.getElementById('input-modal-subtitle').textContent =
+    (cat ? cat.name + ' / ' : '') + formatDate(d);
+
+  // Fill existing data
+  const entry = getSchedules().find(s => s.date === date && s.productId === productId);
+  document.getElementById('input-quantity').value = entry ? entry.quantity : '';
+  document.getElementById('input-note').value = entry ? (entry.note || '') : '';
+
+  document.getElementById('input-delete-btn').style.display = entry ? 'block' : 'none';
+
+  // Hide calc result for noCalc products
+  const calcResult = document.getElementById('calc-result-section');
+  calcResult.style.display = prod.noCalc ? 'none' : 'block';
+
+  updateCalc();
+  document.getElementById('input-modal').classList.add('open');
+  setTimeout(() => document.getElementById('input-quantity').focus(), 300);
+}
+
+function closeInputModal() {
+  document.getElementById('input-modal').classList.remove('open');
+  editingProductId = null;
+  editingDate = null;
+}
+
+function updateCalc() {
+  const prod = getProducts().find(p => p.id === editingProductId);
+  if (!prod) return;
+  const qty = parseInt(document.getElementById('input-quantity').value) || 0;
+  const kg = prod.contentG * qty * (prod.coefficient || 0.68) / 1000;
+  document.getElementById('calc-kg').textContent = kg.toFixed(1) + ' kg';
+  document.getElementById('calc-formula').textContent =
+    `${prod.contentG}g × ${qty}個 × ${prod.coefficient || 0.68} ÷ 1000`;
+}
+
+function saveScheduleEntry() {
+  const qty = parseInt(document.getElementById('input-quantity').value) || 0;
+  const note = document.getElementById('input-note').value.trim();
+
+  let schedules = getSchedules();
+  const idx = schedules.findIndex(s => s.date === editingDate && s.productId === editingProductId);
+
+  if (qty === 0 && idx !== -1) {
+    schedules.splice(idx, 1);
+  } else if (qty > 0) {
+    if (idx !== -1) {
+      schedules[idx].quantity = qty;
+      schedules[idx].note = note;
+    } else {
+      schedules.push({
+        id: genId(),
+        date: editingDate,
+        productId: editingProductId,
+        quantity: qty,
+        note: note,
+      });
+    }
+  }
+
+  setSchedules(schedules);
+  closeInputModal();
+  renderSchedule();
+}
+
+function deleteScheduleEntry() {
+  let schedules = getSchedules();
+  schedules = schedules.filter(s => !(s.date === editingDate && s.productId === editingProductId));
+  setSchedules(schedules);
+  closeInputModal();
+  renderSchedule();
+}
+
+// ===== Settings Rendering =====
+function renderSettings() {
+  renderCategoryList();
+  renderProductList();
+}
+
+function renderCategoryList() {
+  const cats = getCategories().sort((a,b) => (a.order||0) - (b.order||0));
+  const el = document.getElementById('category-list');
+  if (cats.length === 0) {
+    el.innerHTML = '<li class="settings-item"><div class="settings-item-content" style="color:var(--text-secondary)">カテゴリがありません</div></li>';
+    return;
+  }
+  el.innerHTML = cats.map((c, i) => `
+    <li class="settings-item">
+      <div class="drag-handle" data-type="category" data-id="${c.id}">⠿</div>
+      <div class="settings-item-content">
+        <div class="settings-item-name">${esc(c.name)}</div>
+      </div>
+      <div class="settings-item-actions">
+        ${i > 0 ? `<button class="icon-btn" onclick="moveCat('${c.id}',-1)" title="上へ">↑</button>` : ''}
+        ${i < cats.length-1 ? `<button class="icon-btn" onclick="moveCat('${c.id}',1)" title="下へ">↓</button>` : ''}
+        <button class="icon-btn" onclick="openCategoryModal('${c.id}')" title="編集">✏️</button>
+        <button class="icon-btn danger" onclick="deleteCategory('${c.id}')" title="削除">✕</button>
+      </div>
+    </li>`).join('');
+}
+
+function renderProductList() {
+  const prods = getProducts().sort((a,b) => (a.order||0) - (b.order||0));
+  const cats = getCategories();
+  const el = document.getElementById('product-list');
+  if (prods.length === 0) {
+    el.innerHTML = '<li class="settings-item"><div class="settings-item-content" style="color:var(--text-secondary)">商品がありません</div></li>';
+    return;
+  }
+  el.innerHTML = prods.map((p, i) => {
+    const cat = cats.find(c => c.id === p.categoryId);
+    return `
+    <li class="settings-item">
+      <div class="settings-item-content">
+        <div class="settings-item-name">${esc(p.name)}</div>
+        <div class="settings-item-detail">${cat ? esc(cat.name) : '未分類'}${p.noCalc ? ' ／ 原料計算しない' : ` ／ ${p.contentG}g ／ 係数 ${p.coefficient}`}</div>
+      </div>
+      <div class="settings-item-actions">
+        ${i > 0 ? `<button class="icon-btn" onclick="moveProd('${p.id}',-1)" title="上へ">↑</button>` : ''}
+        ${i < prods.length-1 ? `<button class="icon-btn" onclick="moveProd('${p.id}',1)" title="下へ">↓</button>` : ''}
+        <button class="icon-btn" onclick="openProductModal('${p.id}')" title="編集">✏️</button>
+        <button class="icon-btn danger" onclick="deleteProduct('${p.id}')" title="削除">✕</button>
+      </div>
+    </li>`;
+  }).join('');
+}
+
+// ===== Category CRUD =====
+let editingCategoryId = null;
+
+function openCategoryModal(id) {
+  editingCategoryId = id || null;
+  const cat = id ? getCategories().find(c => c.id === id) : null;
+  document.getElementById('category-modal-title').textContent = cat ? 'カテゴリ編集' : 'カテゴリ追加';
+  document.getElementById('cat-name').value = cat ? cat.name : '';
+  document.getElementById('category-modal').classList.add('open');
+  setTimeout(() => document.getElementById('cat-name').focus(), 300);
+}
+
+function closeCategoryModal() {
+  document.getElementById('category-modal').classList.remove('open');
+  editingCategoryId = null;
+}
+
+function saveCategory() {
+  const name = document.getElementById('cat-name').value.trim();
+  if (!name) return;
+
+  let cats = getCategories();
+  if (editingCategoryId) {
+    const c = cats.find(c => c.id === editingCategoryId);
+    if (c) c.name = name;
+  } else {
+    const maxOrder = cats.reduce((m, c) => Math.max(m, c.order || 0), 0);
+    cats.push({ id: genId(), name, order: maxOrder + 1 });
+  }
+  setCategories(cats);
+  closeCategoryModal();
+  renderSettings();
+}
+
+function deleteCategory(id) {
+  showConfirm('カテゴリ削除', 'このカテゴリを削除しますか？\n（紐づく商品のカテゴリは未分類になります）', () => {
+    let cats = getCategories().filter(c => c.id !== id);
+    setCategories(cats);
+    // Remove categoryId from products
+    let prods = getProducts();
+    prods.forEach(p => { if (p.categoryId === id) p.categoryId = ''; });
+    setProducts(prods);
+    renderSettings();
+  });
+}
+
+function moveCat(id, dir) {
+  let cats = getCategories().sort((a,b) => (a.order||0) - (b.order||0));
+  const idx = cats.findIndex(c => c.id === id);
+  if (idx < 0) return;
+  const swapIdx = idx + dir;
+  if (swapIdx < 0 || swapIdx >= cats.length) return;
+  [cats[idx].order, cats[swapIdx].order] = [cats[swapIdx].order, cats[idx].order];
+  setCategories(cats);
+  renderSettings();
+}
+
+// ===== Product CRUD =====
+let editingProductIdSetting = null;
+
+function openProductModal(id) {
+  editingProductIdSetting = id || null;
+  const prod = id ? getProducts().find(p => p.id === id) : null;
+  document.getElementById('product-modal-title').textContent = prod ? '商品編集' : '商品追加';
+
+  // Fill category options
+  const cats = getCategories().sort((a,b) => (a.order||0) - (b.order||0));
+  document.getElementById('prod-category').innerHTML =
+    '<option value="">（未選択）</option>' + cats.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join('');
+
+  document.getElementById('prod-name').value = prod ? prod.name : '';
+  document.getElementById('prod-category').value = prod ? prod.categoryId : '';
+  document.getElementById('prod-contentg').value = prod ? prod.contentG : '';
+  document.getElementById('prod-coeff').value = prod ? prod.coefficient : '';
+  document.getElementById('prod-nocalc').checked = prod ? !!prod.noCalc : false;
+  toggleNoCalcFields();
+
+  document.getElementById('product-modal').classList.add('open');
+  setTimeout(() => document.getElementById('prod-name').focus(), 300);
+}
+
+function closeProductModal() {
+  document.getElementById('product-modal').classList.remove('open');
+  editingProductIdSetting = null;
+}
+
+function toggleNoCalcFields() {
+  const noCalc = document.getElementById('prod-nocalc').checked;
+  document.getElementById('prod-contentg-group').classList.toggle('disabled', noCalc);
+  document.getElementById('prod-coeff-group').classList.toggle('disabled', noCalc);
+}
+
+function saveProduct() {
+  const name = document.getElementById('prod-name').value.trim();
+  const categoryId = document.getElementById('prod-category').value;
+  const noCalc = document.getElementById('prod-nocalc').checked;
+  const contentG = parseFloat(document.getElementById('prod-contentg').value) || 0;
+  const coefficient = parseFloat(document.getElementById('prod-coeff').value) || 0.68;
+
+  if (!name) return;
+
+  let prods = getProducts();
+  if (editingProductIdSetting) {
+    const p = prods.find(p => p.id === editingProductIdSetting);
+    if (p) { p.name = name; p.categoryId = categoryId; p.contentG = contentG; p.coefficient = coefficient; p.noCalc = noCalc; }
+  } else {
+    const maxOrder = prods.reduce((m, p) => Math.max(m, p.order || 0), 0);
+    prods.push({ id: genId(), name, categoryId, contentG, coefficient, noCalc, order: maxOrder + 1 });
+  }
+  setProducts(prods);
+  closeProductModal();
+  renderSettings();
+}
+
+function deleteProduct(id) {
+  showConfirm('商品削除', 'この商品を削除しますか？\n（関連するスケジュールデータも削除されます）', () => {
+    setProducts(getProducts().filter(p => p.id !== id));
+    setSchedules(getSchedules().filter(s => s.productId !== id));
+    renderSettings();
+  });
+}
+
+function moveProd(id, dir) {
+  let prods = getProducts().sort((a,b) => (a.order||0) - (b.order||0));
+  const idx = prods.findIndex(p => p.id === id);
+  if (idx < 0) return;
+  const swapIdx = idx + dir;
+  if (swapIdx < 0 || swapIdx >= prods.length) return;
+  [prods[idx].order, prods[swapIdx].order] = [prods[swapIdx].order, prods[idx].order];
+  setProducts(prods);
+  renderSettings();
+}
+
+// ===== Confirm Dialog =====
+let confirmCallback = null;
+
+function showConfirm(title, message, onConfirm) {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-message').textContent = message;
+  confirmCallback = onConfirm;
+  document.getElementById('confirm-ok-btn').onclick = () => {
+    closeConfirm();
+    if (confirmCallback) confirmCallback();
+  };
+  document.getElementById('confirm-modal').classList.add('open');
+}
+
+function closeConfirm() {
+  document.getElementById('confirm-modal').classList.remove('open');
+  confirmCallback = null;
+}
+
+// ===== Data Export/Import =====
+function exportData() {
+  const data = {
+    products: getProducts(),
+    categories: getCategories(),
+    schedules: getSchedules(),
+    exportDate: new Date().toISOString(),
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `kimfoods_backup_${dateKey(new Date())}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+      showConfirm('データインポート', '現在のデータを上書きしますか？', () => {
+        if (data.products) setProducts(data.products);
+        if (data.categories) setCategories(data.categories);
+        if (data.schedules) setSchedules(data.schedules);
+        renderSchedule();
+        renderSettings();
+        alert('インポートが完了しました');
+      });
+    } catch {
+      alert('ファイルの読み込みに失敗しました');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+}
+
+function confirmResetData() {
+  showConfirm('全データリセット', '全てのデータを削除します。この操作は元に戻せません。本当によろしいですか？', () => {
+    Object.values(KEYS).forEach(k => localStorage.removeItem(k));
+    renderSchedule();
+    renderSettings();
+  });
+}
+
+// ===== LINE Share (Clipboard Copy) =====
+function copyScheduleToClipboard() {
+  const dk = dateKey(currentDate);
+  const products = getProducts().sort((a,b) => (a.order||0) - (b.order||0));
+  const categories = getCategories().sort((a,b) => (a.order||0) - (b.order||0));
+  const schedules = getSchedules().filter(s => s.date === dk);
+
+  if (schedules.length === 0) {
+    alert('この日のスケジュールデータがありません');
+    return;
+  }
+
+  let text = `📋 真田 ${currentDate.getMonth()+1}/${currentDate.getDate()} 製造スケジュール\n`;
+  let dayTotal = 0;
+
+  categories.forEach(cat => {
+    const catProducts = products.filter(p => p.categoryId === cat.id);
+    let catLines = [];
+    let catKg = 0;
+
+    catProducts.forEach(prod => {
+      const entry = schedules.find(s => s.productId === prod.id);
+      if (!entry || !entry.quantity) return;
+      const kg = prod.noCalc ? 0 : prod.contentG * entry.quantity * (prod.coefficient || 0.68) / 1000;
+      catKg += kg;
+      const padName = prod.name.padEnd(12, '\u3000');
+      catLines.push(`  ${padName}${entry.quantity}個`);
+    });
+
+    if (catLines.length > 0) {
+      dayTotal += catKg;
+      text += `\n▼${cat.name}（${catKg.toFixed(1)}kg）\n`;
+      text += catLines.join('\n') + '\n';
+    }
+  });
+
+  text += `\n合計：${dayTotal.toFixed(1)}kg`;
+
+  navigator.clipboard.writeText(text).then(() => {
+    alert('クリップボードにコピーしました。\nLINEに貼り付けてください。');
+  }).catch(() => {
+    // Fallback for older browsers
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    alert('クリップボードにコピーしました。\nLINEに貼り付けてください。');
+  });
+}
+
+// ===== Utility =====
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s;
+  return d.innerHTML;
+}
+
+// Close modals on backdrop click
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      overlay.classList.remove('open');
+    }
+  });
+});
+
+// ===== Init =====
+function initSampleData() {
+  if (getCategories().length > 0 || getProducts().length > 0) return;
+
+  const cats = [
+    { id: 'c1', name: '中辛', order: 1 },
+    { id: 'c2', name: 'BK', order: 2 },
+  ];
+  setCategories(cats);
+
+  const prods = [
+    { id: 'p1', name: '330g', categoryId: 'c1', contentG: 330, coefficient: 0.68, order: 1 },
+    { id: 'p2', name: 'CGC', categoryId: 'c1', contentG: 330, coefficient: 0.68, order: 2 },
+    { id: 'p3', name: 'ストック', categoryId: 'c1', contentG: 330, coefficient: 0.68, order: 3 },
+    { id: 'p4', name: '黒', categoryId: 'c2', contentG: 330, coefficient: 0.68, order: 4 },
+    { id: 'p5', name: 'キムさん', categoryId: 'c2', contentG: 330, coefficient: 0.68, order: 5 },
+    { id: 'p6', name: 'ストック', categoryId: 'c2', contentG: 330, coefficient: 0.68, order: 6 },
+    { id: 'p7', name: '手しごと本格', categoryId: 'c2', contentG: 330, coefficient: 0.68, order: 7 },
+    { id: 'p8', name: '匠', categoryId: 'c2', contentG: 330, coefficient: 0.68, order: 8 },
+  ];
+  setProducts(prods);
+}
+
+initSampleData();
+renderSchedule();
+</script>
+</body>
+</html>

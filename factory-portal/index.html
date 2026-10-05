@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>KIMFOODS 工場ポータル</title>
+<style>
+:root{--bg:#f5f5f2;--panel:#fff;--text:#1f2328;--muted:#697078;--line:#dde1e5;--shadow:0 10px 28px rgba(0,0,0,.08);--radius:22px}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP","Hiragino Sans","Yu Gothic",sans-serif}body{min-height:100vh}.wrap{max-width:1440px;margin:0 auto;padding:36px 42px 46px}header{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:28px}.brand h1{font-size:42px;line-height:1.05;margin:0 0 10px;font-weight:800}.brand p{margin:0;color:var(--muted);font-size:19px}.clock{text-align:right}.time{font-size:42px;font-weight:750}.date{font-size:17px;color:var(--muted);margin-top:8px}.section-title{font-size:20px;font-weight:750;margin:6px 0 14px}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-bottom:28px}a.card,button.card,.card.disabled{min-height:178px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px;display:flex;flex-direction:column;justify-content:space-between;text-decoration:none;color:inherit;touch-action:manipulation}.card .eyebrow{font-size:15px;color:var(--muted);font-weight:650}.card .title{font-size:27px;font-weight:800;line-height:1.25;margin-top:10px}.card .desc{font-size:16px;line-height:1.5;color:var(--muted);margin-top:8px}.card .open{font-size:17px;font-weight:750;margin-top:18px}button.card{font:inherit;text-align:left;cursor:pointer;width:100%;border:1px solid var(--line);}
+.disabled{opacity:.52;box-shadow:none!important;background:#eceeeb!important}.notice{background:#fff;border:1px solid var(--line);border-radius:18px;padding:19px 22px;font-size:16px;line-height:1.7;color:#41474d}.notice strong{color:var(--text)}footer{margin-top:18px;color:var(--muted);font-size:14px;text-align:right}@media(max-width:980px){.wrap{padding:26px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.brand h1,.time{font-size:34px}}@media(max-width:640px){header{align-items:flex-start;flex-direction:column}.clock{text-align:left}.grid{grid-template-columns:1fr}a.card,button.card,.card.disabled{min-height:150px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<header><div class="brand"><h1>KIMFOODS 工場ポータル</h1><p>工場で使うアプリをここから開きます</p></div><div class="clock"><div id="time" class="time">--:--</div><div id="date" class="date">----</div></div></header>
+<div class="section-title">現場アプリ</div>
+<section class="grid">
+<a class="card" href="https://jshangqian-afk.github.io/kimfoods-28h-monitor/" target="_self"><div><div class="eyebrow">勤怠管理</div><div class="title">28時間 勤怠入力</div><div class="desc">従業員用ログインから打刻・確認。管理者画面への専用リンクは置きません。</div></div><div class="open">開く →</div></a>
+<a class="card" href="https://jshangqian-afk.github.io/kimfoods-recipe-calc/" target="_self"><div><div class="eyebrow">製造</div><div class="title">キムチ製造電卓</div><div class="desc">製品・使用量からタレ、副材料、製造記録を確認・入力します。</div></div><div class="open">開く →</div></a>
+<a class="card" href="https://jshangqian-afk.github.io/tare-schedule/" target="_self"><div><div class="eyebrow">タレ製造</div><div class="title">タレ製造スケジュール</div><div class="desc">開始時刻から工程スケジュールを確認し、製造実績を管理します。</div></div><div class="open">開く →</div></a>
+<a class="card" href="https://docs.google.com/spreadsheets/d/1YfMtiRBnFeRD9OhKBte_ca2U-cYhTtO6IYSAHg4SZuU/edit?gid=381171924#gid=381171924" target="_self"><div><div class="eyebrow">受注・製造管理</div><div class="title">ヤマダストア 管理</div><div class="desc">受注数、製造済、残数、必要原料などを確認します。</div></div><div class="open">開く →</div></a>
+<a class="card" href="https://script.google.com/macros/s/AKfycbzxeO9vWJ2zVsR2jVUYLem3xDjJIyrykyouqSeFmZgeexs95X-F2MIzL7-YzfnS6V7MZA/exec" target="_self"><div><div class="eyebrow">製造管理</div><div class="title">製造予定・確定記録</div><div class="desc">工場で使用する製造予定・確定記録の業務アプリを開きます。</div></div><div class="open">開く →</div></a>
+<a class="card" href="https://docs.google.com/spreadsheets/u/1/" target="_self"><div><div class="eyebrow">Google</div><div class="title">Google Sheets</div><div class="desc">工場で使用するスプレッドシート一覧を開きます。</div></div><div class="open">開く →</div></a>
+<button class="card meet-card" id="meetCard" type="button">
+        <div>
+          <div class="eyebrow">映像・連絡</div>
+          <div class="title">工場 Google Meet</div>
+          <div class="desc" id="meetDesc">この端末に保存した固定Meetへ参加します。</div>
+        </div>
+        <div class="open" id="meetOpen">参加する →</div>
+      </button>
+</section>
+<div class="notice"><strong>試験運用方針：</strong>既存アプリの仕様は変更せず、HORIONからの操作性・視認性・入力のしやすさを確認します。アナログホワイトボードも当面併用し、現場で出たメリット／デメリットを記録してから改修方針を決めます。</div>
+<footer>Prototype v0.7 / KIMFOODS Factory</footer>
+</main>
+<script>
+(function(){
+  function pad(n){ return String(n).padStart(2,'0'); }
+  function updateClock(){
+    try{
+      var n = new Date();
+      var w = ['日','月','火','水','木','金','土'][n.getDay()];
+      var time = pad(n.getHours()) + ':' + pad(n.getMinutes());
+      var date = n.getFullYear() + '年' + (n.getMonth()+1) + '月' + n.getDate() + '日（' + w + '）';
+      var t = document.getElementById('time');
+      var d = document.getElementById('date');
+      if(t) t.textContent = time;
+      if(d) d.textContent = date;
+    }catch(e){
+      var t = document.getElementById('time');
+      if(t) t.textContent = '時刻取得中';
+    }
+  }
+  updateClock();
+  setInterval(updateClock, 10000);
+})();
+
+    const MEET_KEY = 'kimfoods_factory_meet_url';
+
+    function getMeetUrl(){
+      return localStorage.getItem(MEET_KEY) || '';
+    }
+
+    function setMeetUi(){
+      const url = getMeetUrl();
+      const desc = document.getElementById('meetDesc');
+      const open = document.getElementById('meetOpen');
+      if(!desc || !open) return;
+      if(url){
+        desc.textContent = 'このHORIONに保存済みの工場Meetへ参加します。';
+        open.textContent = '参加する →';
+      }else{
+        desc.textContent = '初回のみ、この端末に工場Meetの固定URLを設定します。';
+        open.textContent = 'Meet URLを設定 →';
+      }
+    }
+
+    function normalizeMeetUrl(value){
+      const v = (value || '').trim();
+      if(!v) return '';
+      if(/^https:\/\/meet\.google\.com\/[a-z-]+$/i.test(v)) return v;
+      if(/^meet\.google\.com\/[a-z-]+$/i.test(v)) return 'https://' + v;
+      return '';
+    }
+
+    document.addEventListener('DOMContentLoaded', function(){
+      setMeetUi();
+      const card = document.getElementById('meetCard');
+      if(card){
+        card.addEventListener('click', function(){
+          let url = getMeetUrl();
+          if(!url){
+            const entered = prompt('工場Google Meetの固定URLを入力してください。\\n例：https://meet.google.com/xxx-xxxx-xxx');
+            url = normalizeMeetUrl(entered);
+            if(!url){
+              if(entered !== null) alert('Google MeetのURLを確認してください。');
+              return;
+            }
+            localStorage.setItem(MEET_KEY, url);
+            setMeetUi();
+          }
+          window.location.href = url;
+        });
+
+        card.addEventListener('contextmenu', function(e){
+          e.preventDefault();
+          const current = getMeetUrl();
+          const entered = prompt('Meet URLを変更します。空欄で保存すると設定を削除します。', current);
+          if(entered === null) return;
+          if(entered.trim() === ''){
+            localStorage.removeItem(MEET_KEY);
+            setMeetUi();
+            return;
+          }
+          const next = normalizeMeetUrl(entered);
+          if(!next){
+            alert('Google MeetのURLを確認してください。');
+            return;
+          }
+          localStorage.setItem(MEET_KEY, next);
+          setMeetUi();
+        });
+      }
+    });
+
+</script>
+</body>
+</html>
